@@ -1,11 +1,12 @@
-FROM golang:1.23.0 AS builder
+FROM golang:1.22-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN ./build.sh
+RUN go mod download
+RUN cd app/teamgram-server && go build -o /main
 
-FROM ubuntu:latest
-RUN apt update -y && apt install -y ffmpeg psmisc && apt-get clean
-WORKDIR /app
-COPY --from=builder /app/teamgramd/ /app/
-RUN chmod +x /app/docker/entrypoint.sh
-ENTRYPOINT /app/docker/entrypoint.sh
+FROM alpine:latest
+WORKDIR /
+COPY --from=builder /main /main
+EXPOSE 8080
+CMD ["/main"]
+
